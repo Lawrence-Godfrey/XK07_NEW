@@ -44,7 +44,7 @@ void display_connect_wifi()
 
     if(i<10)
     {
-      OD01.print("0"); OD01.print(i)
+      OD01.print("0"); OD01.print(i);
     }
     else
     {
