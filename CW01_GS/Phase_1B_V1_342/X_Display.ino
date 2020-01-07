@@ -75,7 +75,6 @@ void dislay_connecting_FS()
   OD01.println("   Connecting to");
   OD01.println("   Flight Station");
   OD01.println();
-  OD01.set2X();
 
   for(int i=0; i<4; i++)                    //NEEDS TO BE CHANGED
   {
