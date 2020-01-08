@@ -5,6 +5,8 @@ xOD01 OD01;
 
 String ssid, password;
 
+uint8_t almanac_data[];
+
 const char* host = "www.agps.u-blox.com";
 const uint16_t port = 46434;
 
@@ -18,7 +20,7 @@ void setup()
     password = "RapidIoT";
 
     WiFiClient client;
-    if (!client.connect(host, port)) {
+    if (!client.connect(host, port)) {             //Check if can connect to host
         Serial.println("connection failed");
         OD01.clear();
         OD01.println("Could Not Connect ");
@@ -41,8 +43,9 @@ void setup()
     OD01.clear();
     OD01.println("sending request...");
 
-    if (client.connected()) {
-        client.println("https://online-live1.services.u-blox.com/GetOnlineData.ashx?token=XXXXXXXXXXXXXXXXXXXXXX;gnss=gps;datatype=eph,alm,aux;");
+    // try and send request for data. 
+    if (client.connected()) {                                 
+        client.println("https://online-live1.services.u-blox.com/GetOnlineData.ashx?token=XXXXXXXXXXXXXXXXXXXXXX;gnss=gps,glo;datatype=eph,alm,aux;");
     }
 
 
