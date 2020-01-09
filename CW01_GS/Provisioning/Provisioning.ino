@@ -1,7 +1,12 @@
+
+
+
 #include <ArduinoJson.h>    // https://github.com/bblanchon/ArduinoJson
 #include <xProvision.h>     // https://github.com/xinabox/arduino-Provision    
 #include <xOD01.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
 
 xProvision prv;
 xOD01 OD01;
@@ -17,11 +22,14 @@ void setup() {
   // Set RGB Pins as outputs
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
-  delay(5000);
+  delay(10000);
   Wire.begin();
   OD01.begin();
-
+ // Serial.begin(115200);
   prv.begin();
+
+  //prv.formatMemory();
+  
   prv.addWiFi();
   prv.addVariable("Unit Name:", "Choose a name for your XK07");
 
@@ -134,6 +142,8 @@ void setup() {
   OD01.print("    ");
   OD01.print(unit_name);
 
+
+  getAlmanac();
   
 
 }

@@ -1,76 +1,99 @@
-#include <xOD01.h>
+#include <Arduino.h>
+
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266HTTPClient.h>
+
+#include <WiFiClient.h>
+#include <xOD01.h>
+
+ESP8266WiFiMulti WiFiMulti;
 
 xOD01 OD01;
 
-String ssid, password;
+void setup() {
 
-uint8_t almanac_data[];
-
-const char* host = "www.agps.u-blox.com";
-const uint16_t port = 46434;
-
-void setup()
-{
-    Wire.begin();
-    OD01.begin();
-    OD01.prinln("Getting GPS Data...");
-
-    ssid = "XinaBox";
-    password = "RapidIoT";
-
-    WiFiClient client;
-    if (!client.connect(host, port)) {             //Check if can connect to host
-        Serial.println("connection failed");
-        OD01.clear();
-        OD01.println("Could Not Connect ");
-        OD01.println("   to Internet");
-        OD01.println("Please check your");
-        OD01.println("Internet Connection");
-        OD01.println("  and try again");
-        digitalWrite(LED_RED, HIGH);
-        digitalWrite(LED_GREEN, LOW);
-        return;
-    }
-    else
-    {
-        Serial.println("Connected");
-        OD01.println("");
-        OD01.println("Connected to Internet");
-        OD01.println("");
-
-    }
-    OD01.clear();
-    OD01.println("sending request...");
-
-    // try and send request for data. 
-    if (client.connected()) {                                 
-        client.println("https://online-live1.services.u-blox.com/GetOnlineData.ashx?token=XXXXXXXXXXXXXXXXXXXXXX;gnss=gps,glo;datatype=eph,alm,aux;");
-    }
-
-
-    // wait for data to be available
-    unsigned long timeout = millis();
-    while (client.available() == 0) {
-        if (millis() - timeout > 5000) {
-            Serial.println(">>> Client Timeout !");
-            client.stop();
-            delay(60000);
-            return;
-    }
-  }
-
-  while (client.available()) {
-    char ch = static_cast<char>(client.read());
-    Serial.print(ch);
-  }
+  Serial.begin(115200);
+ // Serial.setDebugOutput(true);
 
   Serial.println();
-  Serial.println("closing connection");
-  client.stop();
+  Serial.println();
+  Serial.println();
+
+  for (uint8_t t = 4; t > 0; t--) {
+    Serial.printf("[SETUP] WAIT %d...\n", t);
+    Serial.flush();
+    delay(1000);
+  }
+
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP("XinaBox", "RapidIoT");
+
 }
 
-void loop()
-{
-   
+void loop() {
+  // wait for WiFi connection
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+
+    WiFiClient client;
+
+    HTTPClient http;
+
+    Serial.print("[HTTP] begin...\n");
+    if (http.begin(client, "http://online-live1.services.u-blox.com/GetOnlineData.ashx?token=SjneqlMN-UG2zAzl_Egmdw;gnss=gps;datatype=eph,alm,aux,pos;filteronpos;format=aid;lat=-33.9258;lon=18.4259;pacc=5000")) 
+    {  // HTTP
+
+
+      Serial.print("[HTTP] GET...\n");
+      // start connection and send HTTP header
+      int httpCode = http.GET();
+
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        // HTTP header has been send and Server response header has been handled
+        Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+
+        // file found at server
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) 
+        {
+          String payload = http.getString();
+          Serial.println(payload);
+          
+        }
+      } else {
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      }
+
+      http.end();
+    }
+    else if(http.begin(client, "http://online-live2.services.u-blox.com/GetOnlineData.ashx?token=SjneqlMN-UG2zAzl_Egmdw;gnss=gps;datatype=eph,alm,aux,pos;filteronpos;format=aid;lat=-33.9258;lon=18.4259;pacc=5000"))
+    {
+      Serial.print("Live 2");
+      Serial.print("[HTTP] GET...\n");
+      // start connection and send HTTP header
+      int httpCode = http.GET();
+
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        // HTTP header has been send and Server response header has been handled
+        Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+
+        // file found at server
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+          String payload = http.getString();
+          Serial.println(payload);
+        }
+      } else {
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      }
+
+      http.end();
+    }
+    else {
+      Serial.printf("[HTTP} Unable to connect\n");
+    }
+  }
+
+ 
+  delay(120000);
 }

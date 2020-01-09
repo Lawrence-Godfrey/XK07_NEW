@@ -7,6 +7,7 @@ void setup()
 {
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
+  Serial.begin(115200);
   Wire.begin();
 
    if (!RL0X.begin()) { // <-- enter radio name here

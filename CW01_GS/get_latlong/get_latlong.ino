@@ -1,116 +1,95 @@
+
+#include <xOD01.h>
+#include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <ArduinoJson.h>
-#include "ESP8266WiFi.h"
 
-char ssid = "XinaBox";         // your network SSID name
-char pass = "RapidIoT";          // your network password
+xOD01 OD01;
 
-//Credentials for Google GeoLocation API...
+String ssid, password;
 
-const char* Host = "www.googleapis.com";
-String thisPage = "/geolocation/v1/geolocate?key=";
-String key = "your api key";
 
-int status = WL_IDLE_STATUS;
-String jsonString = "{\n";
+void setup()
+{
+    Wire.begin();
+    OD01.begin();
+    Serial.begin(115200);
+    ssid = "XinaBox";
+    password = "RapidIoT";
 
-double latitude    = 0.0;
-double longitude   = 0.0;
-double accuracy    = 0.0;
-int more_text = 1;    // set to 1 for more debug output
+    WiFi.begin(ssid.c_str(), password.c_str());
+    int count {1};
+    OD01.clear();
+    OD01.set2X();
+    OD01.println("Connecting ");
+    OD01.println(" to WiFi...");
+    OD01.println("");
+    OD01.set1X();
+    while (WiFi.status() != WL_CONNECTED) {
+      digitalWrite(LED_RED, HIGH);
+      
+      OD01.println("   .   ");
+      delay(250);
+      digitalWrite(LED_RED, LOW);
+      delay(250);
+      digitalWrite(LED_RED, HIGH);
+      OD01.clear(0,128,6,8);
+      OD01.println("   .   .   ");
+      delay(250);
+      digitalWrite(LED_RED, LOW);
+      delay(250);
+      digitalWrite(LED_RED, HIGH);
+      OD01.clear(0,128,6,8);
+      OD01.println("   .   .   .   ");
+      delay(250);
+      digitalWrite(LED_RED, LOW);
+      delay(250);
+      digitalWrite(LED_RED, HIGH);
+      OD01.clear(0,128,6,8);
+      OD01.println("   .   .   .   .");
+      delay(250);
+      digitalWrite(LED_RED, LOW);
+      delay(250);
+      OD01.clear(0,128,6,8);
 
-void setup()   {
-  Wire.begin();
-  Serial.println("Start");
- 
-  WiFi.begin(ssid, pass);
+      if(count>30)     //times out after 1 minute
+      {
+        OD01.clear();
+        OD01.println("");
+        OD01.println("");
+        OD01.println("  Could not connect ");
+        OD01.println("       to WiFi");
+        OD01.println("");
+        OD01.println("   Please try again");
+        return;
+      }
+      count++;
+      
+    }
+    
+    OD01.clear();
+    OD01.println("sending request...");
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(".");
-
+    
+  
 }
 
 void loop() {
-
-  char bssid[6];
-  DynamicJsonBuffer jsonBuffer;
-  
-
-// now build the jsonString...
-  jsonString = "{\n";
-  jsonString += "\"homeMobileCountryCode\": 234,\n"; // this is a real UK MCC
-  jsonString += "\"homeMobileNetworkCode\": 27,\n";  // and a real UK MNC
-  jsonString += "\"radioType\": \"gsm\",\n";         // for gsm
-  jsonString += "\"carrier\": \"Vodafone\",\n";      // associated with Vodafone
-  jsonString += "\"wifiAccessPoints\": [\n";
-  for (int j = 0; j < n; ++j)
-  {
-    jsonString += "{\n";
-    jsonString += "\"macAddress\" : \"";
-    jsonString += (WiFi.BSSIDstr(j));
-    jsonString += "\",\n";
-    jsonString += "\"signalStrength\": ";
-    jsonString += WiFi.RSSI(j);
-    jsonString += "\n";
-    if (j < n - 1)
-    {
-      jsonString += "},\n";
+ 
+    if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
+    
+        HTTPClient http;  //Declare an object of class HTTPClient
+        
+        http.begin("https://freegeoip.app/json/");  //Specify request destination
+        int httpCode = http.GET();                                                                  //Send the request
+        
+        if (httpCode > 0) { //Check the returning code
+            String payload = http.getString();   //Get the request response payload
+            Serial.println(payload);                     //Print the response payload
+        }
+    
+    http.end();   //Close connection
     }
-    else
-    {
-      jsonString += "}\n";
-    }
-  }
-  jsonString += ("]\n");
-  jsonString += ("}\n");
-
-  //-------------------------------------------------------------------- Serial.println("");
-
-  //Connect to the client and make the api call
-
-  WiFiClientSecure client;
-  Serial.print("Requesting URL: ");
-  Serial.println("https://" + (String)Host + thisPage + key);
-  Serial.println(" ");
-  if (client.connect(Host, 443)) {
-    Serial.println("Connected");
-    client.println("POST " + thisPage + key + " HTTP/1.1");
-    client.println("Host: " + (String)Host);
-    client.println("Connection: close");
-    client.println("Content-Type: application/json");
-    client.println("User-Agent: Arduino/1.0");
-    client.print("Content-Length: ");
-    client.println(jsonString.length());
-    client.println();
-    client.print(jsonString);
-    delay(500);
-  }
-
-  //Read and parse all the lines of the reply from server
-  while (client.available()) {
-    String line = client.readStringUntil('\r');
-    if (more_text) {
-      Serial.print(line);
-    }
-    JsonObject& root = jsonBuffer.parseObject(line);
-    if (root.success()) {
-      latitude    = root["location"]["lat"];
-      longitude   = root["location"]["lng"];
-      accuracy   = root["accuracy"];
-    }
-  }
-
-  Serial.println("closing connection");
-  Serial.println();
-  client.stop();
-
-  Serial.print("Latitude = ");
-  Serial.println(latitude, 6);
-  Serial.print("Longitude = ");
-  Serial.println(longitude, 6);
-  Serial.print("Accuracy = ");
-  Serial.println(accuracy);
+ 
+delay(30000);    //Send a request every 30 seconds
+ 
 }
