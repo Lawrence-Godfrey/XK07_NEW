@@ -22,7 +22,7 @@ void setup() {
   // Set RGB Pins as outputs
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
-  delay(10000);
+//  delay(10000);
   Wire.begin();
   OD01.begin();
  // Serial.begin(115200);
@@ -141,9 +141,6 @@ void setup() {
   OD01.println("Unit Name:");
   OD01.print("    ");
   OD01.print(unit_name);
-
-
-  getAlmanac();
   
 
 }

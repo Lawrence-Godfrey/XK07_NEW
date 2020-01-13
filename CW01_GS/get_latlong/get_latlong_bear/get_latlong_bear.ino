@@ -4,36 +4,16 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFiMulti.h>
 #include <WiFiClient.h>
+#include <ArduinoJson.h>
 
+#include <WiFiClientSecureBearSSL.h>
 
 xOD01 OD01;
 
 String ssid, password;
 ESP8266WiFiMulti WiFiMulti;
 
-const char* root_ca= \
-"-----BEGIN CERTIFICATE-----\n" \
-"MIIDnzCCAyWgAwIBAgIQWyXOaQfEJlVm0zkMmalUrTAKBggqhkjOPQQDAzCBhTEL\n" \
-"MAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE\n" \
-"BxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxKzApBgNVBAMT\n" \
-"IkNPTU9ETyBFQ0MgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTQwOTI1MDAw\n" \
-"MDAwWhcNMjkwOTI0MjM1OTU5WjCBkjELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy\n" \
-"ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09N\n" \
-"T0RPIENBIExpbWl0ZWQxODA2BgNVBAMTL0NPTU9ETyBFQ0MgRG9tYWluIFZhbGlk\n" \
-"YXRpb24gU2VjdXJlIFNlcnZlciBDQSAyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcD\n" \
-"QgAEAjgZgTrJaYRwWQKOqIofMN+83gP8eR06JSxrQSEYgur5PkrkM8wSzypD/A7y\n" \
-"ZADA4SVQgiTNtkk4DyVHkUikraOCAWYwggFiMB8GA1UdIwQYMBaAFHVxpxlIGbyd\n" \
-"nepBR9+UxEh3mdN5MB0GA1UdDgQWBBRACWFn8LyDcU/eEggsb9TUK3Y9ljAOBgNV\n" \
-"HQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEF\n" \
-"BQcDAQYIKwYBBQUHAwIwGwYDVR0gBBQwEjAGBgRVHSAAMAgGBmeBDAECATBMBgNV\n" \
-"HR8ERTBDMEGgP6A9hjtodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9DT01PRE9FQ0ND\n" \
-"ZXJ0aWZpY2F0aW9uQXV0aG9yaXR5LmNybDByBggrBgEFBQcBAQRmMGQwOwYIKwYB\n" \
-"BQUHMAKGL2h0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET0VDQ0FkZFRydXN0\n" \
-"Q0EuY3J0MCUGCCsGAQUFBzABhhlodHRwOi8vb2NzcC5jb21vZG9jYTQuY29tMAoG\n" \
-"CCqGSM49BAMDA2gAMGUCMQCsaEclgBNPE1bAojcJl1pQxOfttGHLKIoKETKm4nHf\n" \
-"EQGJbwd6IGZrGNC5LkP3Um8CMBKFfI4TZpIEuppFCZRKMGHRSdxv6+ctyYnPHmp8\n" \
-"7IXOMCVZuoFwNLg0f+cB0eLLUg==\n" \
-"-----END CERTIFICATE-----\n";
+const uint8_t fingerprint[20] = {0xA8, 0xDB, 0xAA, 0x26, 0x38, 0x96, 0x0B, 0xD9, 0x49, 0x67, 0x11, 0xF1, 0x4D, 0xE1, 0xCE, 0x29, 0x26, 0xE8, 0xBA, 0x75};
 
 
 void setup()
@@ -105,15 +85,19 @@ void setup()
 }
 
 void loop() {
- 
-    WiFiClient client;
+
+    int start_millis =millis;
     HTTPClient http;
 
+    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+
+    client->setFingerprint(fingerprint);
+    
     Serial.print("[HTTP] begin...\n");
-    if (http.begin(client, "https://freegeoip.app/json/")) 
+    if (http.begin(*client, "https://freegeoip.app/json/")) 
     {  // HTTP
-      http.addHeader("accept", "application/json"); 
-      http.addHeader("content-type", "application/json");
+    //   http.addHeader("accept", "application/json"); 
+    //   http.addHeader("content-type", "application/json");
       Serial.print("[HTTP] GET...\n");
       // start connection and send HTTP header
       int httpCode = http.GET();
@@ -122,9 +106,9 @@ void loop() {
       if (httpCode > 0) {
         // HTTP header has been send and Server response header has been handled
         Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-        for(int i = 0; i< http.headers(); i++){
-                Serial.println(http.header(i));
-              }
+        // for(int i = 0; i< http.headers(); i++){
+        //         Serial.println(http.header(i));
+        //       }
         // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) 
         {
@@ -133,7 +117,23 @@ void loop() {
 //          Serial.println(headerDate);                     
      
           String payload = http.getString();  
-          Serial.println(payload);
+         // Serial.println(payload);
+          
+//          const size_t bufferSize = size;
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject& root = jsonBuffer.parseObject(payload);
+          
+          String lat = root["latitude"];
+          String longi = root["longitude"];
+
+          Serial.println(lat);
+          Serial.println(longi);
+          
+          
+
+          
+
+          
 
         }
       }
