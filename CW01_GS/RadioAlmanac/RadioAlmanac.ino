@@ -9,6 +9,8 @@ void setup()
 {
     Serial.begin(115200);
     Wire.begin();
+    Serial.print("Size: ");
+    Serial.println(sizeof(almanac));
 
      if (!RL0X.begin()) { // <-- enter radio name here
     Serial.println("Check the connector to CR01");
@@ -29,10 +31,10 @@ void loop()
 {
     Serial.println("Sending to RL0X Server");
 
-    for(int i = 0; i < 4963; i+=150)
+    for(int i = 0; i < 124; i+=10)
     {
-        uint8_t packet [150] {0};
-        std::copy(almanac + i, almanac + i + 150, packet + 0);
+        uint8_t packet [10] {0};
+        std::copy(almanac + i, almanac + i + 10, packet + 0);
 
         Serial.write(packet,sizeof(packet));
 
