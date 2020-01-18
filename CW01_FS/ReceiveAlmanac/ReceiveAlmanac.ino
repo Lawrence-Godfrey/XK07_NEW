@@ -71,38 +71,37 @@ void loop() {
     uint8_t len = sizeof(buf);
 
     SerialUSB.println("receiving start sequence");
-
-    
-    
+      
     if (RL0X.recv(buf, &len)) {
       if(equalarrays(start_seq, buf, len))
       {
         SerialUSB.println("START SEQUENCE RECEIVED");
         myFile = SD.open(datafile, FILE_WRITE);
-        while(RL0X.waitAvailableTimeout(2000))
+        while(RL0X.waitAvailableTimeout(3000))
         {
           SerialUSB.println("Receiving Packet");
-          unsigned char packet [102];
+          unsigned char packet [122];
           uint8_t pack_len = sizeof(packet);
-
+           
+          delay(250);
           String packetString;
           if(RL0X.recv(packet, &pack_len))
           {
-            if(packet[0]=='S' && packet[101]=='E')
+            if(packet[0]=='S' && packet[121]=='E')
             {
               packetString = (char*)packet;
               myFile.println(packetString);
               SerialUSB.println(packetString);  
-              uint8_t data[] = "1";
+              uint8_t data[1] = {1};
               delay(100);
-              RL0X.send(data, sizeof(data));
+              RL0X.send(data, 1);
               SerialUSB.println("sending 1");
             }
             else
             {
-              uint8_t data[] = "0";
+              uint8_t data[1] = {0};
               delay(100);
-              RL0X.send(data, sizeof(data));
+              RL0X.send(data, 1);
               SerialUSB.println("Sending 0");
               packetString = (char*)packet;
               myFile.println(packetString);
@@ -121,12 +120,12 @@ void loop() {
       }
     }    
     else {
-      SerialUSB.println("recv failed");
+      SerialUSB.println("[RADIO] receive failed");
     }
   }
   else
   {
-    SerialUSB.println("timeout failed");
+    SerialUSB.println("[RADIO] Did not receive Start Sequence");
   }
   
   digitalWrite(CW01_BLUE,LOW);

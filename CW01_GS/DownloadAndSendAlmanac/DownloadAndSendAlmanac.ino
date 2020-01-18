@@ -122,8 +122,8 @@ void loop() {
           {
             OD01.println("Sending Almanac...");
             char almanac[alm_size + 1];
-            const char* payloadc = payload.c_str();
-            unsigned pos = 0;
+            // const char* payloadc = payload.c_str();
+            // unsigned pos = 0;
 
 //            while(pos < payload.length())
 //            {
@@ -142,44 +142,56 @@ void loop() {
             delay(100);
             RL0X.send(start_seq, sizeof(start_seq));
             
-            for(int i = 0; i < alm_size; i+=150)
+            for(int i = 0; i < alm_size; i+=120)
             {
               lastPacketSuccesfull = false;
               while(!lastPacketSuccesfull)
               {
-                uint8_t packet [102] {0};
-                std::copy(almanac + i + 0, almanac + i + 150, packet + 1);
+                
+                uint8_t packet [122] {0};
+                std::copy(almanac + i + 0, almanac + i + 120, packet + 1);
                 packet[0] = 'S';
-                packet[151] = 'E';
+                packet[121] = 'E';
 
                 Serial.println((char*)packet);
 
-                delay(250);
-                RL0X.send(packet, 152);
+                delay(400);
+                
+                RL0X.send(packet, 122);
                 
                 uint8_t check[1];
-                uint8_t len = sizeof(check);
+                uint8_t len = 1;
 
                 if (RL0X.waitAvailableTimeout(3000)) {
                   if (RL0X.recv(check, &len)) {
                     Serial.print("got reply: ");
-                    if(check[0]=='0')
+                    if(check[0]==0)
                     {
+                      OD01.println("Resending packet");
+                      Serial.println("Resending Packet");
                       lastPacketSuccesfull = false;
                     }
-                    else if(check[0]=='1')
+                    else if(check[0]==1)
                     {
                       lastPacketSuccesfull = true;
+                      Serial.println("Sending next packet");
+                    }
+                    else
+                    {
+                      Serial.println("neither");
+                      return;
                     }
                     
                   } else {
-                    Serial.println("recv failed");
+                    Serial.println("[RADIO] Could not receive check bit");
+                    return;
                   }
 
 
                 } else {
                   
-                  Serial.println("No reply, is the RL01 server running ?");
+                  Serial.println("[RADIO] Nothing received, is the Flight Station Running?");
+                  return;
                 }
               }
                 
@@ -187,34 +199,7 @@ void loop() {
 
             uint8_t end_seq[] = "[END]";
             delay(100);
-            RL0X.send(end_seq, sizeof(end_seq));
-            
-
-            
-
-            uint8_t buf[195];
-            uint8_t len = sizeof(buf);
-
-            if (RL0X.waitAvailableTimeout(3000)) 
-            {
-                if (RL0X.recv(buf, &len)) 
-                {
-                    Serial.print("got reply: ");
-                    Serial.println((char*)buf);
-                    Serial.print("RSSI: ");
-                    Serial.println(RL0X.lastRssi(), DEC);
-                } 
-                else 
-                {
-                    Serial.println("recv failed");
-                }
-            } 
-            else 
-            {
-                Serial.println("No reply, is the RL01 server running ?");
-            }
-
-            
+            RL0X.send(end_seq, sizeof(end_seq));          
             
             delay(20000);
           }
@@ -227,11 +212,11 @@ void loop() {
     }
     
     else {
-      Serial.printf("[HTTP} Unable to connect\n");
+      Serial.printf("[HTTP] Unable to connect to UBlox API\n");
     }
   }
   else
-    Serial.println("could not connect to wifi");
+    Serial.println("[WiFi] Could not connect to wifi");
 
  
   delay(120000);
