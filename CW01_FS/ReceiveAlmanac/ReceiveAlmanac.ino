@@ -83,7 +83,7 @@ void loop() {
           unsigned char packet [122];
           uint8_t pack_len = sizeof(packet);
            
-          delay(250);
+          delay(400);
           String packetString;
           if(RL0X.recv(packet, &pack_len))
           {

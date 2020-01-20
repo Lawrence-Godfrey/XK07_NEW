@@ -155,7 +155,7 @@ void loop() {
 
                 Serial.println((char*)packet);
 
-                delay(400);
+                delay(700);
                 
                 RL0X.send(packet, 122);
                 
@@ -179,19 +179,15 @@ void loop() {
                     else
                     {
                       Serial.println("neither");
-                      return;
                     }
                     
                   } else {
                     Serial.println("[RADIO] Could not receive check bit");
-                    return;
                   }
 
 
                 } else {
-                  
                   Serial.println("[RADIO] Nothing received, is the Flight Station Running?");
-                  return;
                 }
               }
                 
