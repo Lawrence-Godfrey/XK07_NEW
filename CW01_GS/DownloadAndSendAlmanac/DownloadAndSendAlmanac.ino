@@ -82,7 +82,7 @@ void loop() {
     HTTPClient http;
 
     Serial.print("[HTTP] begin...\n");
-    if (http.begin(client, "http://online-live1.services.u-blox.com/GetOnlineData.ashx?token=SjneqlMN-UG2zAzl_Egmdw;gnss=gps;datatype=eph,alm,aux,pos;filteronpos;format=aid")) 
+    if (http.begin(client, "http://online-live1.services.u-blox.com/GetOnlineData.ashx?token=SjneqlMN-UG2zAzl_Egmdw;gnss=gps;datatype=eph,alm,aux,pos;filteronpos;format=aid"))   //TODO add latency tag? Add second server request 
     {  // HTTP
 
 
@@ -120,7 +120,6 @@ void loop() {
           Serial.print("Size: ");
           Serial.println(alm_size);
           Serial.println("______________________________________________________");
-          
           OD01.println("Downloaded Almanac");
           while(true)
           {
