@@ -61,6 +61,9 @@ void setup() {
     //RL0X.setModemConfig(RL01.Bw31_25Cr48Sf512);
     RL0X.setFrequency(RL03_FREQ);
     RL0X.setTxPower(23, false);
+    RL0X.setThisAddress(ADDR_ID);
+    RL0X.setHeaderFrom(FROM_ID);
+    RL0X.setHeaderTo(TO_ID); 
   }
 }
 
@@ -95,24 +98,25 @@ void loop() {
         // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) 
         {
-          String payload = "This is a test"
-                            "Definitely a test"
-                            "nothing more than a test"
-                            "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
-                            "This is a test 2"
-                            "Definitely a test"
-                            "nothing more than a test"
-                            "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
-                            "This is a test 3"
-                            "Definitely a test"
-                            "nothing more than a test"
-                            "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
-                            "This is a test 4"
-                            "Definitely a test"
-                            "nothing more than a test"
-                            "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long";
+          String payload = http.getString();
+          // "This is a test"
+          //                   "Definitely a test"
+          //                   "nothing more than a test"
+          //                   "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
+          //                   "This is a test 2"
+          //                   "Definitely a test"
+          //                   "nothing more than a test"
+          //                   "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
+          //                   "This is a test 3"
+          //                   "Definitely a test"
+          //                   "nothing more than a test"
+          //                   "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long"
+          //                   "This is a test 4"
+          //                   "Definitely a test"
+          //                   "nothing more than a test"
+          //                   "just testing if everything works and now this is a long sentence that i'm testing and its being tested and its long";
           Serial.println(payload);
-          int alm_size = payload.length(); 
+          int alm_size = http.getSize(); //payload.length(); 
           Serial.print("Size: ");
           Serial.println(alm_size);
           Serial.println("______________________________________________________");
@@ -139,7 +143,7 @@ void loop() {
             Serial.println("Sending to RL0X Server");
 
             uint8_t start_seq[] = "[START]";
-            delay(100);
+            //delay(100);
             RL0X.send(start_seq, sizeof(start_seq));
             
             for(int i = 0; i < alm_size; i+=120)
@@ -155,7 +159,7 @@ void loop() {
 
                 Serial.println((char*)packet);
 
-                delay(700);
+                delay(100);
                 
                 RL0X.send(packet, 122);
                 
@@ -194,7 +198,7 @@ void loop() {
             }
 
             uint8_t end_seq[] = "[END]";
-            delay(100);
+            //delay(100);
             RL0X.send(end_seq, sizeof(end_seq));          
             
             delay(20000);
