@@ -3,16 +3,19 @@
 #include <xCS11_SDU.h>
 #include <SD.h>
 
+#include <TinyGPS.h>
+
+
 #define CW01_RED 11
 #define CW01_GREEN 12
 #define CW01_BLUE 4
   
 // Radio Address
-const uint8_t RADIO_ID {0x11};
-const float RL03_FREQ {915.0};
+#define RADIO_ID 0x11;
+#define RL03_FREQ 915.0;
 
 File myFile;
-String datafile;
+char[] datafile;
 
 void setup() {
   // Start the SerialUSB Monitor

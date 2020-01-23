@@ -17,12 +17,9 @@ ESP8266WiFiMulti WiFiMulti;
 
 xOD01 OD01;
 
-#define RL03_FREQ 915.0
-
 // Radio Address
-#define ADDR_ID 0x31
-#define FROM_ID 0x31
-#define TO_ID   0x11
+const uint8_t RADIO_ID {0x11};
+const float RL03_FREQ {915.0};
 
 bool lastPacketSuccesfull;
 
@@ -31,9 +28,6 @@ void setup() {
   Serial.begin(115200);
  // Serial.setDebugOutput(true);
   Wire.begin();
-  Serial.println();
-  Serial.println();
-  Serial.println();
 
   OD01.begin();
   OD01.clear();
@@ -59,9 +53,9 @@ void setup() {
     //RL0X.setModemConfig(RL01.Bw31_25Cr48Sf512);
     RL0X.setFrequency(RL03_FREQ);
     RL0X.setTxPower(23, false);
-    RL0X.setThisAddress(ADDR_ID);
-    RL0X.setHeaderFrom(FROM_ID);
-    RL0X.setHeaderTo(TO_ID); 
+    RL0X.setThisAddress(RADIO_ID);
+    RL0X.setHeaderFrom(RADIO_ID);
+    RL0X.setHeaderTo(RADIO_ID); 
   }
 }
 
@@ -117,7 +111,7 @@ void loop() {
             
             lastPacketSuccesfull = false;
             
-            // read up to 128 byte
+            // read up to 120 bytes
             c = stream->readBytes(buff, std::min((size_t)len, sizeof(buff)));
             Serial.printf("readBytes: %d\n", c);
             if (!c) {
@@ -126,31 +120,30 @@ void loop() {
             
             while(!lastPacketSuccesfull)
             {
-              
-
               // write it to Serial
               Serial.write(buff, c);
 
 
               uint8_t * packet;
-              packet = (uint8_t*) malloc (c+2+1);
+              packet = (uint8_t*) malloc (c+3+1);
               
-              std::copy(buff + 0, buff + c, packet + 1);
-              packet[0] = 'S';
-              packet[c+1] = 'E';
+              std::copy(buff + 0, buff + c, packet + 2);
+              packet[0] = c;
+              packet[1] = 'S';
+              packet[c+2] = 'E';
 
               //packet = (uint8_t*)"SThis is a test iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiThis is a testE";
               
               Serial.println();
-              Serial.write(packet, c+2);
+              Serial.write(packet, c+3);
               Serial.println();
-              Serial.println("size: ");Serial.print(c+2);
+              Serial.println("size: ");Serial.print(c+3);
               Serial.println();
 
               
               delay(100);
               
-              RL0X.send(packet, 122);
+              RL0X.send(packet, 123);
               
               uint8_t check[1];
               uint8_t len = 1;
@@ -196,7 +189,6 @@ void loop() {
 
       http.end();
     }
-    
     else {
       Serial.printf("[HTTP] Unable to connect to UBlox API\n");
     }
