@@ -37,26 +37,27 @@ void setup()
     if(!SD.exists(DataFolder))
     {
       SerialUSB.println("Making Log Folder");
-      WriteInfo_SD("[SD CARD] Making Log Folder", NORMAL);
+      writeInfo("[SD CARD] Making Log Folder", NORMAL);
       
       if(SD.mkdir(DataFolder))
       {
         SerialUSB.println("Folder Created");
-        WriteInfo_SD("[SD CARD] Folder Created", NORMAL);    
+        writeInfo("[SD CARD] Folder Created", NORMAL);    
       }
       else
       {
         SerialUSB.println("Could not create Folder");
-        WriteInfo_SD("[SD CARD] Could not create Folder", NORMAL);   
+        writeInfo("[SD CARD] Could not create Folder", NORMAL);   
       }
     }
 
     SD_CARD_INITIALIZED = true;
     SerialUSB.println("SD Card initialized.");
-    WriteInfo_SD("[SD CARD] SD Card Initialized", NORMAL);
+    writeInfo("[SD CARD] SD Card Initialized", NORMAL);
 
     CreateNewDatafile();
     WriteHeaders();
+
     DataFile.close();
   }
   
@@ -65,9 +66,11 @@ void setup()
 void loop()
 {
   if(SD_CARD_INITIALIZED){
-    DataFile = SD.open(filename, FILE_WRITE);
+    log_index = 0;
+    
+    DataFile = SD.open(DataFileName, FILE_WRITE);
     SerialUSB.println("Logging Data");
-    WriteInfo_SD("[SD CARD] Logging Data", NORMAL); 
+    writeInfo("[SD CARD] Logging Data", NORMAL); 
     
     //Log Sensor data 
     LogSN01();
@@ -79,13 +82,15 @@ void loop()
     LogRL0X();
 
     DataFile.println();
+
     SerialUSB.println("File Closed");
-    WriteInfo_SD("[SD CARD] Datafile Closed", NORMAL); 
+    writeInfo("[SD CARD] Datafile Closed", NORMAL); 
 
     DataFile.close();
   }
 
-  LogDelay();
+  // delays by an amount which depends on LOW_USE_MODE 
+  delay(5000);    // TODO - change to millis() implementation, the one I used made it hard to upload 
 }
 
   
